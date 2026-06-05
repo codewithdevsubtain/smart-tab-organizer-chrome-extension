@@ -148,15 +148,28 @@ async function autoGroupByDomain(windowId = null) {
     byDomain.get(domain).push(tab);
   }
 
+  const existingGroups = await chrome.tabGroups.query(windowId != null ? { windowId } : {});
+  const existingGroupMap = new Map();
+  for (const g of existingGroups) {
+    if (g.title) existingGroupMap.set(g.title.toLowerCase(), g.id);
+  }
+
   let groupsCreated = 0;
   for (const [domain, domainTabs] of byDomain) {
     if (domainTabs.length < 1) continue;
     const title = getFriendlyDomainName(domain);
     const color = colorForKey(domain);
     const tabIds = domainTabs.map((t) => t.id);
-    const groupId = await chrome.tabs.group({ tabIds });
-    await chrome.tabGroups.update(groupId, { title, color, collapsed: false });
-    groupsCreated++;
+    
+    const existingGroupId = existingGroupMap.get(title.toLowerCase());
+    if (existingGroupId !== undefined) {
+      await chrome.tabs.group({ tabIds, groupId: existingGroupId });
+    } else {
+      const groupId = await chrome.tabs.group({ tabIds });
+      await chrome.tabGroups.update(groupId, { title, color, collapsed: false });
+      existingGroupMap.set(title.toLowerCase(), groupId);
+      groupsCreated++;
+    }
   }
 
   return { groupsCreated, tabCount: tabs.length };
@@ -169,6 +182,12 @@ async function smartGroup(windowId = null) {
   const settings = await getSettings();
   let keywordGroups = 0;
 
+  const existingGroups = await chrome.tabGroups.query(windowId != null ? { windowId } : {});
+  const existingGroupMap = new Map();
+  for (const g of existingGroups) {
+    if (g.title) existingGroupMap.set(g.title.toLowerCase(), g.id);
+  }
+
   // Step 1: Keyword rules (cross-domain topics first)
   for (const rule of settings.keywordRules) {
     const ungrouped = (await getGroupableTabs(windowId)).filter((t) => t.groupId === -1);
@@ -180,13 +199,21 @@ async function smartGroup(windowId = null) {
     if (matched.length === 0) continue;
 
     const tabIds = matched.map((t) => t.id);
-    const groupId = await chrome.tabs.group({ tabIds });
-    await chrome.tabGroups.update(groupId, {
-      title: rule.groupName,
-      color: rule.color || colorForKey(rule.groupName),
-      collapsed: false,
-    });
-    keywordGroups++;
+    const title = rule.groupName;
+    const existingGroupId = existingGroupMap.get(title.toLowerCase());
+
+    if (existingGroupId !== undefined) {
+      await chrome.tabs.group({ tabIds, groupId: existingGroupId });
+    } else {
+      const groupId = await chrome.tabs.group({ tabIds });
+      await chrome.tabGroups.update(groupId, {
+        title,
+        color: rule.color || colorForKey(title),
+        collapsed: false,
+      });
+      existingGroupMap.set(title.toLowerCase(), groupId);
+      keywordGroups++;
+    }
   }
 
   // Step 2: Domain grouping for remaining ungrouped tabs
