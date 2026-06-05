@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Tab Organizer",
+  "version": "1.0.0",
+  "description": "Intelligently group, collapse, and save browser tab sessions. Built for power users with 30–100+ tabs.",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "storage",
+    "contextMenus",
+    "system.display"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Smart Tab Organizer"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+O",
+        "mac": "Command+Shift+O"
+      },
+      "description": "Open Smart Tab Organizer"
+    },
+    "auto-group-tabs": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "Auto group all tabs by domain"
+    },
+    "collapse-all-groups": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Comma",
+        "mac": "Command+Shift+Comma"
+      },
+      "description": "Collapse all tab groups"
+    }
+  }
+}

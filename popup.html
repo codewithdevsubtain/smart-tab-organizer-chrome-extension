@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Tab Organizer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">📑</div>
+        <div>
+          <h1>Smart Tab Organizer</h1>
+          <p>Group, collapse & save sessions</p>
+        </div>
+      </div>
+      <div class="stats-bar" id="stats-bar">
+        <span class="stat-pill"><strong id="stat-tabs">—</strong> tabs</span>
+        <span class="stat-pill"><strong id="stat-groups">—</strong> groups</span>
+        <span class="stat-pill"><strong id="stat-sessions">—</strong> sessions</span>
+      </div>
+    </header>
+
+    <div class="app-body" style="position: relative;">
+      <div class="loading-overlay" id="loading">
+        <div class="spinner" role="status" aria-label="Loading"></div>
+      </div>
+
+      <nav class="tab-nav" role="tablist">
+        <button type="button" class="active" data-panel="organize" role="tab">Organize</button>
+        <button type="button" data-panel="tabs" role="tab">Tabs</button>
+        <button type="button" data-panel="sessions" role="tab">Sessions</button>
+      </nav>
+
+      <!-- Organize panel -->
+      <section id="panel-organize" class="panel active" role="tabpanel">
+        <div class="section">
+          <h2 class="section-title">Quick actions</h2>
+          <button type="button" class="btn btn-primary btn-lg" id="btn-auto-group">
+            <span class="icon" data-icon="layers"></span> Auto Group All Tabs
+          </button>
+          <div class="btn-row" style="margin-top: 8px;">
+            <button type="button" class="btn btn-primary" id="btn-smart-group" style="flex:1">
+              <span class="icon" data-icon="sparkles"></span> Smart Group
+            </button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Collapse / expand</h2>
+          <div class="card-grid">
+            <button type="button" class="btn btn-lg" id="btn-collapse-all">
+              <span class="icon" data-icon="chevrons-down-up"></span> Collapse All
+            </button>
+            <button type="button" class="btn btn-lg" id="btn-expand-all">
+              <span class="icon" data-icon="chevrons-up-down"></span> Expand All
+            </button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2 class="section-title">Tab groups</h2>
+          <ul class="group-list" id="group-list"></ul>
+          <div class="empty-state hidden" id="groups-empty">
+            <div class="emoji">🗂️</div>
+            <h3>No tab groups yet</h3>
+            <p>Auto Group or Smart Group to organize your tabs.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabs panel -->
+      <section id="panel-tabs" class="panel" role="tabpanel">
+        <div class="alert alert-warning hidden" id="duplicates-alert">
+          <span>⚠️</span>
+          <span id="duplicates-text">Duplicate tabs detected</span>
+        </div>
+
+        <div class="search-wrap">
+          <span class="search-icon icon" data-icon="search"></span>
+          <input type="search" id="tab-search" placeholder="Search by title or URL…" autocomplete="off" />
+        </div>
+
+        <div class="bulk-bar hidden" id="bulk-bar">
+          <span id="selection-count">0 selected</span>
+          <button type="button" class="btn btn-icon btn-ghost" id="btn-group-selected" title="Group">Group</button>
+          <button type="button" class="btn btn-icon btn-ghost" id="btn-ungroup-selected"
+            title="Ungroup">Ungroup</button>
+          <button type="button" class="btn btn-icon btn-ghost" id="btn-pin" title="Pin">Pin</button>
+          <button type="button" class="btn btn-icon btn-ghost" id="btn-unpin" title="Unpin">Unpin</button>
+          <button type="button" class="btn btn-icon btn-ghost" id="btn-new-window" title="New window">Window</button>
+          <button type="button" class="btn btn-icon btn-danger" id="btn-close-selected" title="Close">Close</button>
+        </div>
+
+        <div class="select-all-row">
+          <input type="checkbox" id="select-all-tabs" />
+          <label for="select-all-tabs">Select all visible</label>
+        </div>
+
+        <ul class="tab-list" id="tab-list"></ul>
+        <div class="empty-state hidden" id="tabs-empty">
+          <div class="emoji">🔍</div>
+          <h3>No tabs match</h3>
+          <p>Try a different search term.</p>
+        </div>
+      </section>
+
+      <!-- Sessions panel -->
+      <section id="panel-sessions" class="panel" role="tabpanel">
+        <div class="section">
+          <button type="button" class="btn btn-primary btn-lg" id="btn-save-session">
+            <span class="icon" data-icon="save"></span> Save Current Session
+          </button>
+        </div>
+        <ul class="session-list" id="session-list"></ul>
+        <div class="empty-state" id="sessions-empty">
+          <div class="emoji">💾</div>
+          <h3>No saved sessions</h3>
+          <p>Save your current tabs to restore them later.</p>
+        </div>
+      </section>
+
+      <p class="footer-link">
+        <a href="#" id="open-options">Settings & keyword rules →</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Save session modal -->
+  <div class="modal-overlay" id="save-modal">
+    <div class="modal" role="dialog" aria-labelledby="save-modal-title">
+      <h3 id="save-modal-title">Save session</h3>
+      <input type="text" id="session-name-input" placeholder="e.g. Research — AI Agents" maxlength="80" />
+      <div class="modal-actions">
+        <button type="button" class="btn" id="save-modal-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="save-modal-confirm">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Close confirm modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal" role="dialog">
+      <h3>Close tabs?</h3>
+      <p id="confirm-message" style="margin:0 0 12px;font-size:12px;color:var(--text-muted)"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="confirm-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-ok">Close tabs</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+  <script src="icons-inline.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>
